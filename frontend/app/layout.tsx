@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Background Remover — Premium Quality",
-  description: "Remove image backgrounds with AI precision. No credits, no limits.",
+  title: "Remove BG - Inside Jasson",
+  description: "Remoção de fundo premium com IA. Sem créditos, sem limites. By V4 Company.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

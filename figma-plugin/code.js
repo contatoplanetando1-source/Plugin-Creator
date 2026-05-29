@@ -1,7 +1,7 @@
 // Remove BG — Insider Jasson
 // Detecta automaticamente o layer selecionado, sem upload manual
 
-figma.showUI(__html__, { width: 360, height: 560, title: "Remove BG — Insider Jasson" });
+figma.showUI(__html__, { width: 380, height: 620, title: "Remove BG — Insider Jasson" });
 
 let lastNodeId = null;
 

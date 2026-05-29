@@ -1,0 +1,11 @@
+{
+  "name": "Remove BG — Insider Jasson",
+  "id": "remove-bg-insider-jasson",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma", "figjam"],
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:8000", "https://localhost:8000"]
+  }
+}

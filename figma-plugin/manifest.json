@@ -6,6 +6,8 @@
   "ui": "ui.html",
   "editorType": ["figma", "figjam"],
   "networkAccess": {
-    "allowedDomains": ["http://localhost:8000", "https://localhost:8000"]
+    "allowedDomains": [],
+    "devAllowedDomains": ["http://localhost:8000", "https://localhost:8000"],
+    "reasoning": "Connects to local FastAPI backend for AI background removal"
   }
 }

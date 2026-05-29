@@ -98,16 +98,6 @@ body { font-family:'Montserrat',sans-serif; background:var(--bg); color:var(--te
 .btn-row { display:flex; gap:8px; }
 .btn-row > * { flex:1; }
 
-/* REFINE */
-.refine-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.btn-ref {
-  background:var(--bg); border:1px solid var(--line); border-radius:6px;
-  color:var(--sub); font-family:'Montserrat',sans-serif; font-size:9.5px;
-  font-weight:700; padding:8px 6px; cursor:pointer; transition:all .15s;
-}
-.btn-ref:hover { border-color:#888; color:var(--text); }
-.btn-ref:disabled { opacity:.4; cursor:not-allowed; }
-
 /* FORMAT */
 .fmt-row { display:flex; gap:6px; margin-bottom:10px; }
 .pill { padding:4px 12px; border-radius:100px; border:1px solid var(--line); font-size:9.5px; font-weight:700; cursor:pointer; color:var(--muted); background:var(--bg); transition:all .15s; }
@@ -216,10 +206,10 @@ body { font-family:'Montserrat',sans-serif; background:var(--bg); color:var(--te
   <div id="card-preview" style="display:none">
     <div class="lbl">
       Layer detectado — <span id="layer-name" style="color:var(--text);text-transform:none;letter-spacing:0;font-weight:600"></span>
-      <div class="ba-tabs">
-        <div class="ba-tab on" id="tab-o" onclick="showTab('o')">Original</div>
-        <div class="ba-tab"   id="tab-r" onclick="showTab('r')">Sem fundo</div>
-      </div>
+    </div>
+    <div class="ba-tabs">
+      <div class="ba-tab on" id="tab-o" onclick="showTab('o')">Original</div>
+      <div class="ba-tab"   id="tab-r" onclick="showTab('r')">Sem fundo</div>
     </div>
     <div class="preview-wrap">
       <img id="prev-img" src="" style="display:none" />
@@ -242,25 +232,9 @@ body { font-family:'Montserrat',sans-serif; background:var(--bg); color:var(--te
     </div>
   </div>
 
-  <!-- REFINAR (após processar) -->
-  <div id="card-refine" style="display:none">
-    <div class="lbl">Refinar</div>
-    <div class="refine-grid">
-      <button class="btn-ref" onclick="refine('hair')">💇 Melhorar Cabelo</button>
-      <button class="btn-ref" onclick="refine('smooth')">✨ Suavizar Bordas</button>
-      <button class="btn-ref" onclick="refine('restore')">🔧 Restaurar Áreas</button>
-      <button class="btn-ref" onclick="refine('shrink')">🧹 Remover Sobras</button>
-    </div>
-  </div>
-
   <!-- EXPORTAR (após processar) -->
   <div id="card-export" style="display:none">
-    <div class="lbl">Exportar</div>
-    <div class="fmt-row">
-      <div class="pill on" data-f="png"  onclick="pickFmt(this)">PNG</div>
-      <div class="pill"    data-f="jpg"  onclick="pickFmt(this)">JPG</div>
-      <div class="pill"    data-f="webp" onclick="pickFmt(this)">WebP</div>
-    </div>
+    <div class="lbl">Exportar resultado</div>
     <div class="btn-row">
       <button class="btn-dark" onclick="applyFigma()">🎨 Inserir no Figma</button>
       <button class="btn-s"    onclick="dlResult()">⬇ Download</button>
@@ -275,20 +249,21 @@ body { font-family:'Montserrat',sans-serif; background:var(--bg); color:var(--te
 </div>
 
 <script>
-const API  = 'http://localhost:8000';
 const PASS = 'MelhorTribo';
 
-let sid = null, origName = 'imagem', fmt = 'png';
-let origUrl = null, resUrl = null;
-let pendingBytes = null; // bytes do layer Figma
+let origBytes = null;  // Uint8Array dos bytes do layer
+let origUrl   = null;  // data URL para preview original
+let resUrl    = null;  // data URL para resultado sem fundo
+let resBytes  = null;  // Uint8Array do resultado
+let origName  = 'imagem';
 
 // ── LOCK ────────────────────────────────────────────────────
 const pw = document.getElementById('pw');
 document.getElementById('eye-btn').onclick = () => {
-  const s = pw.type === 'password';
-  pw.type = s ? 'text' : 'password';
-  document.getElementById('eye-s').style.display = s ? 'none' : '';
-  document.getElementById('eye-h').style.display = s ? '' : 'none';
+  const show = pw.type === 'password';
+  pw.type = show ? 'text' : 'password';
+  document.getElementById('eye-s').style.display = show ? 'none' : '';
+  document.getElementById('eye-h').style.display = show ? '' : 'none';
 };
 function tryUnlock() {
   if (pw.value.trim() === PASS) {
@@ -302,8 +277,26 @@ function tryUnlock() {
 }
 pw.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
 
+// ── CONVERSÃO bytes ↔ data URL ───────────────────────────────
+function bytesToDataUrl(bytes) {
+  const arr = Array.isArray(bytes) ? new Uint8Array(bytes) : bytes;
+  let binary = '';
+  for (let i = 0; i < arr.length; i += 8192) {
+    binary += String.fromCharCode.apply(null, arr.subarray(i, Math.min(i + 8192, arr.length)));
+  }
+  return 'data:image/png;base64,' + btoa(binary);
+}
+
+function dataUrlToBytes(dataUrl) {
+  const b64 = dataUrl.split(',')[1];
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
 // ── MENSAGENS DO CODE.JS ─────────────────────────────────────
-window.onmessage = async ev => {
+window.onmessage = function(ev) {
   const m = ev.data.pluginMessage;
   if (!m) return;
 
@@ -318,15 +311,25 @@ window.onmessage = async ev => {
 
     case 'loading-preview':
       setStatus('loading', 'Lendo layer…');
+      document.getElementById('s-status').style.display = '';
       break;
 
     case 'image-ready':
-      pendingBytes = m.bytes;
-      origName = m.name || 'imagem';
+      origBytes = new Uint8Array(m.bytes);
+      origName  = m.name || 'imagem';
       document.getElementById('layer-name').textContent = origName;
+
+      // Converte para data URL imediatamente — sem backend, sem createObjectURL
+      origUrl = bytesToDataUrl(m.bytes);
+      resUrl  = null;
+      resBytes = null;
+
       showState('ready');
-      // Upload automático para o backend
-      await uploadBytes(m.bytes, origName);
+      showPreview(origUrl, 'o');
+      document.getElementById('s-status').style.display = '';
+      document.getElementById('card-export').style.display = 'none';
+      document.getElementById('card-actions').style.display = '';
+      setStatus('idle', 'Layer pronto. Clique em Remover Fundo.');
       break;
 
     case 'applied':
@@ -339,149 +342,98 @@ window.onmessage = async ev => {
   }
 };
 
-// ── UPLOAD AUTOMÁTICO DOS BYTES FIGMA ────────────────────────
-async function uploadBytes(bytes, name) {
-  setStatus('loading', 'Preparando imagem…');
-  const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' });
-  const file = new File([blob], name + '.png', { type: 'image/png' });
-
-  const form = new FormData();
-  form.append('file', file);
-  try {
-    const r = await fetch(API + '/api/upload', { method: 'POST', body: form });
-    if (!r.ok) throw new Error(await r.text());
-    const d = await r.json();
-    sid = d.id;
-
-    // Mostrar preview original
-    origUrl = URL.createObjectURL(blob);
-    showPreview(origUrl, 'o');
-    setStatus('idle', 'Layer pronto. Clique em Remover Fundo.');
-    document.getElementById('card-actions').style.display = '';
-    document.getElementById('s-status').style.display = '';
-  } catch (e) {
-    setStatus('error', 'Backend offline? Inicie o servidor local. ' + e.message);
-  }
-}
-
-// ── PROCESSAR ───────────────────────────────────────────────
+// ── REMOVER FUNDO (IA in-browser via CDN) ────────────────────
 async function processImg() {
-  if (!sid) return;
-  setStatus('loading', 'Processando com IA…');
-  document.getElementById('btn-proc').disabled = true;
+  if (!origBytes) return;
+  const btn = document.getElementById('btn-proc');
+  btn.disabled = true;
+  document.getElementById('card-export').style.display = 'none';
   try {
-    const r = await fetch(API + '/api/remove-bg', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: sid, model: 'isnet-general-use' }),
+    setStatus('loading', 'Carregando modelo de IA…');
+
+    // Import dinâmico do @imgly/background-removal via CDN
+    const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/index.js');
+    const removeBackground = mod.removeBackground || mod.default?.removeBackground || mod.default;
+
+    if (typeof removeBackground !== 'function') throw new Error('Biblioteca não carregou corretamente.');
+
+    const blob = new Blob([origBytes], { type: 'image/png' });
+
+    setStatus('loading', 'Processando com IA…');
+    const resultBlob = await removeBackground(blob, {
+      progress: (key, current, total) => {
+        if (total > 0) {
+          const pct = Math.round((current / total) * 100);
+          setStatus('loading', `IA: ${pct}%`);
+        }
+      }
     });
-    if (!r.ok) throw new Error(await r.text());
-    await poll();
-    resUrl = API + '/api/image/' + sid + '/result.png?t=' + Date.now();
+
+    // Converte resultado para data URL
+    resUrl   = await blobToDataUrl(resultBlob);
+    resBytes = dataUrlToBytes(resUrl);
+
     showPreview(resUrl, 'r');
-    setStatus('done', '✅ Fundo removido!');
-    document.getElementById('card-refine').style.display = '';
+    setStatus('done', '✅ Fundo removido com sucesso!');
     document.getElementById('card-export').style.display = '';
   } catch (e) {
-    setStatus('error', e.message);
+    setStatus('error', 'Erro: ' + (e.message || String(e)));
   } finally {
-    document.getElementById('btn-proc').disabled = false;
+    btn.disabled = false;
   }
 }
 
-async function poll(max = 150) {
-  for (let i = 0; i < max; i++) {
-    try {
-      const r = await fetch(API + '/api/status/' + sid);
-      if (r.ok) {
-        const d = await r.json();
-        if (d.status === 'done') return;
-        if (d.status === 'error') throw new Error(d.error || 'Falha no processamento');
-      }
-    } catch (e) { throw e; }
-    await sleep(700);
-  }
-  throw new Error('Timeout');
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 // ── CAPTURAR OUTRO ELEMENTO ──────────────────────────────────
 function captureElement() {
-  sid = null; origUrl = null; resUrl = null;
-  document.getElementById('card-refine').style.display = 'none';
-  document.getElementById('card-export').style.display = 'none';
-  document.getElementById('card-actions').style.display = 'none';
-  document.getElementById('card-preview').style.display = 'none';
-  document.getElementById('s-status').style.display = 'none';
+  origBytes = null; origUrl = null; resUrl = null; resBytes = null;
+  document.getElementById('card-export').style.display   = 'none';
+  document.getElementById('card-actions').style.display  = 'none';
+  document.getElementById('card-preview').style.display  = 'none';
+  document.getElementById('s-status').style.display      = 'none';
   parent.postMessage({ pluginMessage: { type: 'capture-element' } }, '*');
 }
 
-// ── REFINAR ──────────────────────────────────────────────────
-async function refine(action) {
-  if (!sid) return;
-  setStatus('loading', 'Refinando…');
-  try {
-    const r = await fetch(API + '/api/refine', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: sid, action }),
-    });
-    if (!r.ok) throw new Error(await r.text());
-    resUrl = API + '/api/image/' + sid + '/result.png?t=' + Date.now();
-    showPreview(resUrl, 'r');
-    setStatus('done', '✅ Refinado!');
-  } catch (e) { setStatus('error', e.message); }
-}
-
 // ── INSERIR NO FIGMA ─────────────────────────────────────────
-async function applyFigma() {
-  if (!resUrl) return;
+function applyFigma() {
+  if (!resBytes) return;
   setStatus('loading', 'Inserindo no Figma…');
-  try {
-    const r = await fetch(resUrl);
-    const buf = await r.arrayBuffer();
-    parent.postMessage({
-      pluginMessage: { type: 'apply-result', bytes: Array.from(new Uint8Array(buf)), name: origName }
-    }, '*');
-  } catch (e) { setStatus('error', e.message); }
+  parent.postMessage({
+    pluginMessage: { type: 'apply-result', bytes: Array.from(resBytes), name: origName }
+  }, '*');
 }
 
 // ── DOWNLOAD ─────────────────────────────────────────────────
-async function dlResult() {
-  if (!sid) return;
-  setStatus('loading', 'Preparando…');
-  try {
-    const r = await fetch(API + '/api/export', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: sid, format: fmt, quality: 'hd', feather: 0 }),
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const d = await r.json();
-    const a = document.createElement('a');
-    a.href = API + d.download_url;
-    a.download = 'sem-fundo.' + fmt;
-    a.target = '_blank'; a.click();
-    setStatus('done', '⬇ Download iniciado!');
-  } catch (e) { setStatus('error', e.message); }
+function dlResult() {
+  if (!resUrl) return;
+  const a = document.createElement('a');
+  a.href     = resUrl;
+  a.download = origName + '-sem-fundo.png';
+  a.click();
+  setStatus('done', '⬇ Download iniciado!');
 }
 
 // ── HELPERS ──────────────────────────────────────────────────
-function pickFmt(el) {
-  document.querySelectorAll('.pill[data-f]').forEach(p => p.classList.remove('on'));
-  el.classList.add('on'); fmt = el.dataset.f;
-}
-
 function showState(state) {
-  document.getElementById('s-waiting').style.display  = state === 'waiting' ? '' : 'none';
-  document.getElementById('s-capture').style.display  = state === 'capture' ? '' : 'none';
-  document.getElementById('card-preview').style.display = state === 'ready' ? '' : 'none';
+  document.getElementById('s-waiting').style.display    = state === 'waiting' ? '' : 'none';
+  document.getElementById('s-capture').style.display    = state === 'capture' ? '' : 'none';
+  document.getElementById('card-preview').style.display = state === 'ready'   ? '' : 'none';
 }
 
 function showPreview(url, tab) {
   document.getElementById('tab-o').classList.toggle('on', tab === 'o');
   document.getElementById('tab-r').classList.toggle('on', tab === 'r');
   const img = document.getElementById('prev-img');
-  img.src = url; img.style.display = '';
+  img.src = url;
+  img.style.display = '';
 }
 
 function showTab(tab) {
@@ -490,20 +442,17 @@ function showTab(tab) {
 }
 
 function setStatus(type, text) {
-  const bar  = document.getElementById('status-bar');
-  const span = document.getElementById('st-txt');
+  const bar = document.getElementById('status-bar');
   bar.className = 'status ' + (type || 'idle');
-  span.textContent = text;
+  document.getElementById('st-txt').textContent = text;
   const ico = document.getElementById('st-icon');
   if (type === 'loading') {
     ico.outerHTML = '<div class="spin" id="st-icon"></div>';
   } else {
-    (document.getElementById('st-icon') || ico).outerHTML =
-      `<span id="st-icon">${type === 'done' ? '✓' : type === 'error' ? '✕' : '○'}</span>`;
+    const sym = type === 'done' ? '✓' : type === 'error' ? '✕' : '○';
+    (document.getElementById('st-icon') || ico).outerHTML = `<span id="st-icon">${sym}</span>`;
   }
 }
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
 </html>

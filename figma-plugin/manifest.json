@@ -7,7 +7,12 @@
   "editorType": ["figma", "figjam"],
   "networkAccess": {
     "allowedDomains": ["none"],
-    "devAllowedDomains": ["http://localhost:8000", "https://localhost:8000"],
-    "reasoning": "Connects to local FastAPI backend for AI background removal"
+    "devAllowedDomains": [
+      "http://localhost:8000",
+      "https://cdn.jsdelivr.net",
+      "https://static.imgly.io",
+      "https://unpkg.com"
+    ],
+    "reasoning": "Connects to local FastAPI or uses @imgly/background-removal CDN for AI processing"
   }
 }

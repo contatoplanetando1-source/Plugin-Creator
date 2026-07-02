@@ -10,7 +10,7 @@ export default function ThankYou({ name, onReset }: ThankYouProps) {
 
   return (
     <div className="animate-fade-in-up rounded-2xl bg-white p-8 text-center shadow-card sm:p-12">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-v4-green/15">
+      <div className="animate-pop-in mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-v4-green/15">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -23,14 +23,21 @@ export default function ThankYou({ name, onReset }: ThankYouProps) {
             strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="animate-check-draw"
           />
         </svg>
       </div>
 
-      <h1 className="mt-6 text-2xl font-extrabold text-v4-near-black sm:text-3xl">
+      <h1
+        className="animate-fade-in-up mt-6 text-2xl font-extrabold text-v4-near-black opacity-0 sm:text-3xl"
+        style={{ animationDelay: "200ms" }}
+      >
         Obrigado{firstName ? `, ${firstName}` : ""}!
       </h1>
-      <p className="mx-auto mt-3 max-w-sm text-sm text-v4-charcoal/70 sm:text-base">
+      <p
+        className="animate-fade-in-up mx-auto mt-3 max-w-sm text-sm text-v4-charcoal/70 opacity-0 sm:text-base"
+        style={{ animationDelay: "320ms" }}
+      >
         Seu feedback foi enviado com sucesso e é muito importante para
         continuarmos evoluindo as Learnings e a Tribo. 💛
       </p>
@@ -38,7 +45,8 @@ export default function ThankYou({ name, onReset }: ThankYouProps) {
       <button
         type="button"
         onClick={onReset}
-        className="mt-8 inline-flex items-center justify-center rounded-full border border-v4-gray-light px-6 py-2.5 text-sm font-semibold text-v4-charcoal transition-colors hover:border-v4-red hover:text-v4-red"
+        style={{ animationDelay: "440ms" }}
+        className="animate-fade-in-up mt-8 inline-flex items-center justify-center rounded-full border border-v4-gray-light px-6 py-2.5 text-sm font-semibold text-v4-charcoal opacity-0 transition-colors hover:border-v4-red hover:text-v4-red"
       >
         Enviar outra resposta
       </button>

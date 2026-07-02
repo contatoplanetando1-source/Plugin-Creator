@@ -141,7 +141,7 @@ export default function FeedbackForm() {
             onChange={(e) => update("nome", e.target.value)}
             placeholder="Digite seu nome completo"
             className={[
-              "w-full rounded-lg border bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-colors placeholder:text-v4-charcoal/40 focus:border-v4-red focus:bg-white focus:ring-2 focus:ring-v4-red/15",
+              "w-full rounded-lg border bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-all duration-200 placeholder:text-v4-charcoal/40 focus:-translate-y-0.5 focus:border-v4-red focus:bg-white focus:shadow-md focus:ring-2 focus:ring-v4-red/15",
               errors.nome ? "border-v4-red" : "border-v4-gray-light",
             ].join(" ")}
           />
@@ -171,7 +171,7 @@ export default function FeedbackForm() {
           value={form.learningsMelhorias}
           onChange={(e) => update("learningsMelhorias", e.target.value)}
           placeholder="Sua resposta"
-          className="w-full rounded-lg border border-v4-gray-light bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-colors placeholder:text-v4-charcoal/40 focus:border-v4-red focus:bg-white focus:ring-2 focus:ring-v4-red/15"
+          className="w-full rounded-lg border border-v4-gray-light bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-all duration-200 placeholder:text-v4-charcoal/40 focus:-translate-y-0.5 focus:border-v4-red focus:bg-white focus:shadow-md focus:ring-2 focus:ring-v4-red/15"
         />
       </Field>
 
@@ -226,6 +226,17 @@ export default function FeedbackForm() {
         </Field>
       </div>
 
+      <div
+        className="animate-fade-in-up flex items-center gap-3 pb-1 pt-7 opacity-0"
+        style={{ animationDelay: "460ms" }}
+      >
+        <span className="h-px flex-1 bg-v4-gray-light" />
+        <span className="text-[11px] font-bold uppercase tracking-widest text-v4-red">
+          Para fechar
+        </span>
+        <span className="h-px flex-1 bg-v4-gray-light" />
+      </div>
+
       <Field
         number={7}
         title="Você tem sugestões de melhorias para plugins, ferramentas ou processos que utilizamos?"
@@ -235,7 +246,7 @@ export default function FeedbackForm() {
           onChange={(e) => update("sugestoesPluginsFerramentas", e.target.value)}
           placeholder="Sua resposta"
           rows={4}
-          className="w-full resize-y rounded-lg border border-v4-gray-light bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-colors placeholder:text-v4-charcoal/40 focus:border-v4-red focus:bg-white focus:ring-2 focus:ring-v4-red/15"
+          className="w-full resize-y rounded-lg border border-v4-gray-light bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-all duration-200 placeholder:text-v4-charcoal/40 focus:-translate-y-0.5 focus:border-v4-red focus:bg-white focus:shadow-md focus:ring-2 focus:ring-v4-red/15"
         />
       </Field>
 
@@ -249,7 +260,7 @@ export default function FeedbackForm() {
           onChange={(e) => update("comentariosAdicionais", e.target.value)}
           placeholder="Sua resposta"
           rows={4}
-          className="w-full resize-y rounded-lg border border-v4-gray-light bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-colors placeholder:text-v4-charcoal/40 focus:border-v4-red focus:bg-white focus:ring-2 focus:ring-v4-red/15"
+          className="w-full resize-y rounded-lg border border-v4-gray-light bg-v4-gray-light/30 px-4 py-2.5 text-sm text-v4-near-black outline-none transition-all duration-200 placeholder:text-v4-charcoal/40 focus:-translate-y-0.5 focus:border-v4-red focus:bg-white focus:shadow-md focus:ring-2 focus:ring-v4-red/15"
         />
       </Field>
 

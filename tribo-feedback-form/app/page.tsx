@@ -7,13 +7,19 @@ export default function Home() {
 
       <div className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
         <header className="mb-8 text-center">
-          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-v4-near-black text-lg font-extrabold text-white">
+          <div className="animate-pop-in mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-v4-near-black text-lg font-extrabold text-white">
             V4
           </div>
-          <h1 className="text-2xl font-extrabold leading-tight text-v4-near-black sm:text-4xl">
+          <h1
+            className="animate-fade-in-up text-2xl font-extrabold leading-tight text-v4-near-black opacity-0 sm:text-4xl"
+            style={{ animationDelay: "120ms" }}
+          >
             Formulário de Feedback da Tribo
           </h1>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-v4-charcoal/70 sm:text-base">
+          <p
+            className="animate-fade-in-up mx-auto mt-3 max-w-lg text-sm text-v4-charcoal/70 opacity-0 sm:text-base"
+            style={{ animationDelay: "220ms" }}
+          >
             Sua opinião ajuda a construir Learnings melhores e uma Tribo cada
             vez mais forte. Leva menos de 3 minutos.
           </p>
